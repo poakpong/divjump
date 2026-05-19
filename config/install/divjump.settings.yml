@@ -1,2 +1,4 @@
-div_id: ''
-row_position: 3
+divs: []
+page_visibility:
+  type: 0
+  pages: ''

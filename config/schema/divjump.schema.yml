@@ -2,9 +2,26 @@ divjump.settings:
   type: config_object
   label: 'DivJump settings'
   mapping:
-    div_id:
-      type: string
-      label: 'Div ID ที่ต้องการย้าย'
-    row_position:
-      type: integer
-      label: 'ตำแหน่ง views-row ที่ต้องการแทรก'
+    divs:
+      type: sequence
+      label: 'รายการ Div ที่ต้องการย้าย'
+      sequence:
+        type: mapping
+        label: 'Div entry'
+        mapping:
+          div_id:
+            type: string
+            label: 'Div ID'
+          row_position:
+            type: integer
+            label: 'ตำแหน่ง views-row ที่ต้องการแทรก'
+    page_visibility:
+      type: mapping
+      label: 'การแสดงตามหน้า'
+      mapping:
+        type:
+          type: integer
+          label: 'ประเภทการแสดง (0=ยกเว้น, 1=เฉพาะ)'
+        pages:
+          type: string
+          label: 'รายการ path ของหน้า'
