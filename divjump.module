@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * DivJump module - ย้าย div ไปแทรกระหว่าง views-row ที่กำหนด
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function divjump_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.divjump':
+      $output = '';
+      $output .= '<h2>' . t('เกี่ยวกับ DivJump') . '</h2>';
+      $output .= '<p>' . t('โมดูล DivJump ใช้สำหรับย้าย div element (เช่น Ad block) ไปแทรกระหว่าง views-row ที่กำหนด โดยไม่ต้องแก้ไข template โดยตรง') . '</p>';
+      $output .= '<h2>' . t('วิธีใช้งาน') . '</h2>';
+      $output .= '<ol>';
+      $output .= '<li>' . t('ไปที่ <strong>Administration » Configuration » User Interface » DivJump</strong>') . '</li>';
+      $output .= '<li>' . t('กรอก <strong>Div ID</strong> ของ element ที่ต้องการย้าย เช่น <code>block-thex-adsenseadunit-3</code>') . '</li>';
+      $output .= '<li>' . t('กรอก <strong>ตำแหน่งที่ต้องการแทรก</strong> เช่น ถ้าต้องการแทรกระหว่าง row ที่ 3 และ 4 ให้กรอก <code>3</code>') . '</li>';
+      $output .= '<li>' . t('กด <strong>Save</strong> และ clear cache') . '</li>';
+      $output .= '</ol>';
+      $output .= '<h2>' . t('หมายเหตุ') . '</h2>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('ค่าตำแหน่งเริ่มนับที่ 1 เช่น กรอก 3 = แทรกหลัง row ที่ 3 (ระหว่าง row 3 และ 4)') . '</li>';
+      $output .= '<li>' . t('ถ้าจำนวน views-row น้อยกว่าที่กำหนด โมดูลจะไม่ทำการย้าย') . '</li>';
+      $output .= '<li>' . t('รองรับ views-row class จาก Drupal Views เท่านั้น') . '</li>';
+      $output .= '</ul>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function divjump_page_attachments(array &$attachments) {
+  $config = \Drupal::config('divjump.settings');
+  $div_id = $config->get('div_id');
+  $row_position = $config->get('row_position');
+
+  // แนบ JS เฉพาะเมื่อมีการตั้งค่าครบ
+  if (!empty($div_id) && !empty($row_position)) {
+    $attachments['#attached']['library'][] = 'divjump/divjump';
+    $attachments['#attached']['drupalSettings']['divjump'] = [
+      'divId' => $div_id,
+      'rowPosition' => (int) $row_position,
+    ];
+  }
+}

@@ -1,0 +1,13 @@
+divjump.settings:
+  title: 'DivJump'
+  description: 'ตั้งค่าการย้าย div ไปแทรกใน views-row'
+  parent: system.admin_config_ui
+  route_name: divjump.settings
+  weight: 10
+
+divjump.help:
+  title: 'DivJump Help'
+  description: 'คู่มือการใช้งาน DivJump'
+  parent: system.admin_help
+  route_name: divjump.help
+  weight: 10

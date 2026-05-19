@@ -1,0 +1,15 @@
+divjump.settings:
+  path: '/admin/config/divjump'
+  defaults:
+    _form: '\Drupal\divjump\Form\DivJumpSettingsForm'
+    _title: 'DivJump Settings'
+  requirements:
+    _permission: 'administer divjump'
+
+divjump.help:
+  path: '/admin/help/divjump'
+  defaults:
+    _controller: '\Drupal\divjump\Controller\DivJumpHelpController::help'
+    _title: 'DivJump Help'
+  requirements:
+    _permission: 'access administration pages'

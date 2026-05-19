@@ -1,0 +1,4 @@
+administer divjump:
+  title: 'Administer DivJump settings'
+  description: 'Configure DivJump module settings including div ID and row position.'
+  restrict access: true

@@ -1,0 +1,9 @@
+divjump:
+  version: 1.0.0
+  js:
+    js/divjump.js:
+      attributes:
+        defer: true
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
