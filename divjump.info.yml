@@ -1,6 +1,6 @@
 name: DivJump
 type: module
-description: 'ย้ายตำแหน่ง div element ไปแทรกระหว่าง views-row ที่กำหนด'
+description: 'Move a div element and insert it between specific views-rows'
 core_version_requirement: ^10 || ^11
 package: Custom
-version: '1.1.0'
+version: '1.1.1'

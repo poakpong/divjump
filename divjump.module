@@ -2,7 +2,7 @@
 
 /**
  * @file
- * DivJump module - ย้าย div ไปแทรกระหว่าง views-row ที่กำหนด
+ * DivJump module - Move a div element and insert it between specified views-rows.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -13,21 +13,21 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function divjump_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.divjump':
-      $output  = '<h2>' . t('เกี่ยวกับ DivJump') . '</h2>';
-      $output .= '<p>' . t('โมดูล DivJump ใช้สำหรับย้าย div element (เช่น Ad block) ไปแทรกระหว่าง views-row ที่กำหนด โดยไม่ต้องแก้ไข template โดยตรง') . '</p>';
-      $output .= '<h2>' . t('วิธีใช้งาน') . '</h2>';
+      $output  = '<h2>' . t('About DivJump') . '</h2>';
+      $output .= '<p>' . t('The DivJump module moves a div element (e.g. an Ad block) and inserts it between specified views-rows without editing templates directly.') . '</p>';
+      $output .= '<h2>' . t('How to use') . '</h2>';
       $output .= '<ol>';
-      $output .= '<li>' . t('ไปที่ <strong>Administration » Configuration » User Interface » DivJump</strong>') . '</li>';
-      $output .= '<li>' . t('กด <strong>"+ เพิ่ม Div"</strong> แล้วกรอก <strong>Div ID</strong> และ <strong>ตำแหน่ง</strong> ที่ต้องการแทรก') . '</li>';
-      $output .= '<li>' . t('สามารถเพิ่มได้หลาย Div โดยแต่ละรายการมี row position เป็นของตัวเอง') . '</li>';
-      $output .= '<li>' . t('ตั้งค่า <strong>Page Visibility</strong> เพื่อกำหนดว่า module นี้จะทำงานหน้าไหน') . '</li>';
-      $output .= '<li>' . t('กด <strong>Save</strong> และ clear cache') . '</li>';
+      $output .= '<li>' . t('Go to <strong>Administration » Configuration » User Interface » DivJump</strong>') . '</li>';
+      $output .= '<li>' . t('Click <strong>"+ Add Div"</strong>, then enter the <strong>Div ID</strong> and the <strong>row position</strong> where it should be inserted.') . '</li>';
+      $output .= '<li>' . t('Multiple Div entries are supported — each entry has its own row position.') . '</li>';
+      $output .= '<li>' . t('Configure <strong>Page Visibility</strong> to control which pages this module runs on.') . '</li>';
+      $output .= '<li>' . t('Click <strong>Save</strong> and clear the cache.') . '</li>';
       $output .= '</ol>';
-      $output .= '<h2>' . t('หมายเหตุ') . '</h2>';
+      $output .= '<h2>' . t('Notes') . '</h2>';
       $output .= '<ul>';
-      $output .= '<li>' . t('ตำแหน่งเริ่มนับที่ 1 เช่น กรอก 3 = แทรกหลัง row ที่ 3 (ระหว่าง row 3 และ 4)') . '</li>';
-      $output .= '<li>' . t('ถ้าจำนวน views-row น้อยกว่าที่กำหนด โมดูลจะข้ามรายการนั้น') . '</li>';
-      $output .= '<li>' . t('รองรับ <code>.views-row</code> class จาก Drupal Views เท่านั้น') . '</li>';
+      $output .= '<li>' . t('Row position is 1-based. e.g. entering 3 inserts the div after row 3 (between row 3 and row 4).') . '</li>';
+      $output .= '<li>' . t('If the number of .views-row elements is less than the specified position, that entry is skipped.') . '</li>';
+      $output .= '<li>' . t('Only <code>.views-row</code> class from Drupal Views is supported.') . '</li>';
       $output .= '</ul>';
       return $output;
   }
@@ -40,7 +40,7 @@ function divjump_page_attachments(array &$attachments) {
   $config = \Drupal::config('divjump.settings');
   $divs   = $config->get('divs') ?? [];
 
-  // กรอง divs ที่มีข้อมูลครบ
+  // Filter entries that have both div_id and row_position.
   $active_divs = array_values(array_filter($divs, function ($div) {
     return !empty($div['div_id']) && !empty($div['row_position']);
   }));
@@ -49,25 +49,20 @@ function divjump_page_attachments(array &$attachments) {
     return;
   }
 
-  // ─── ตรวจ Page Visibility ───────────────────────────────────────────────
+  // ── Page Visibility check ────────────────────────────────────────────────
   $visibility_type = (int) ($config->get('page_visibility.type') ?? 0);
   $pages           = trim($config->get('page_visibility.pages') ?? '');
 
   if (!empty($pages)) {
-    /** @var \Drupal\Core\Path\CurrentPathStack $path_current */
     $current_path = \Drupal::service('path.current')->getPath();
-
-    /** @var \Drupal\path_alias\AliasManagerInterface $alias_manager */
-    $alias = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
-
-    /** @var \Drupal\Core\Path\PathMatcherInterface $path_matcher */
+    $alias        = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
     $path_matcher = \Drupal::service('path.matcher');
 
     $match = $path_matcher->matchPath($current_path, $pages)
           || ($alias !== $current_path && $path_matcher->matchPath($alias, $pages));
 
-    // type=0 → ทุกหน้ายกเว้นที่ระบุ → ถ้า match ให้หยุด
-    // type=1 → เฉพาะหน้าที่ระบุ     → ถ้าไม่ match ให้หยุด
+    // type=0 → all pages except listed  → stop if matched
+    // type=1 → only listed pages        → stop if not matched
     if ($visibility_type === 0 && $match) {
       return;
     }
@@ -76,12 +71,12 @@ function divjump_page_attachments(array &$attachments) {
     }
   }
   elseif ($visibility_type === 1) {
-    // type=1 แต่ไม่ได้กรอก pages → ไม่แสดงที่ไหนเลย
+    // type=1 but no pages entered → show nowhere
     return;
   }
 
-  // ─── แนบ JS ─────────────────────────────────────────────────────────────
-  $attachments['#attached']['library'][]              = 'divjump/divjump';
+  // ── Attach JS ────────────────────────────────────────────────────────────
+  $attachments['#attached']['library'][]                 = 'divjump/divjump';
   $attachments['#attached']['drupalSettings']['divjump'] = [
     'divs' => $active_divs,
   ];

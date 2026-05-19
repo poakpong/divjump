@@ -5,16 +5,16 @@ namespace Drupal\divjump\Controller;
 use Drupal\Core\Controller\ControllerBase;
 
 /**
- * Controller สำหรับหน้า Help ของ DivJump.
+ * Help controller for the DivJump module.
  */
 class DivJumpHelpController extends ControllerBase {
 
   /**
-   * แสดงหน้า help.
+   * Returns the help page content.
    */
   public function help() {
     return [
-      '#type' => 'markup',
+      '#type'   => 'markup',
       '#markup' => divjump_help('help.page.divjump', \Drupal::routeMatch()),
     ];
   }

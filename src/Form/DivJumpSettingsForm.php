@@ -6,7 +6,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Admin settings form สำหรับ DivJump module.
+ * Admin settings form for the DivJump module.
  */
 class DivJumpSettingsForm extends ConfigFormBase {
 
@@ -30,7 +30,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('divjump.settings');
 
-    // โหลด divs จาก form state (ระหว่าง AJAX) หรือจาก config (ครั้งแรก)
+    // Load divs from form state (during AJAX) or from config (first load).
     if ($form_state->get('divs') === NULL) {
       $saved = $config->get('divs') ?? [];
       $form_state->set('divs', !empty($saved) ? $saved : [['div_id' => '', 'row_position' => 3]]);
@@ -38,16 +38,16 @@ class DivJumpSettingsForm extends ConfigFormBase {
     $divs = $form_state->get('divs');
 
     $form['description'] = [
-      '#type' => 'markup',
+      '#type'   => 'markup',
       '#markup' => '<div class="messages messages--info">'
-        . $this->t('<strong>DivJump</strong>: ย้าย div element ไปแทรกระหว่าง <code>.views-row</code> ที่กำหนด โดยใช้ JavaScript')
+        . $this->t('<strong>DivJump</strong>: Moves div elements and inserts them between specified <code>.views-row</code> elements using JavaScript.')
         . '</div>',
     ];
 
-    // ─── ตารางรายการ Div ────────────────────────────────────────────────────
+    // ── Div entries table ────────────────────────────────────────────────────
     $form['divs_wrapper'] = [
       '#type'   => 'fieldset',
-      '#title'  => $this->t('รายการ Div ที่ต้องการย้าย'),
+      '#title'  => $this->t('Div entries to move'),
       '#prefix' => '<div id="divjump-divs-wrapper">',
       '#suffix' => '</div>',
     ];
@@ -55,11 +55,11 @@ class DivJumpSettingsForm extends ConfigFormBase {
     $form['divs_wrapper']['divs'] = [
       '#type'   => 'table',
       '#header' => [
-        $this->t('Div ID (ไม่ต้องใส่ #)'),
-        $this->t('แทรกหลัง Row ที่'),
+        $this->t('Div ID (without #)'),
+        $this->t('Insert after row #'),
         $this->t(''),
       ],
-      '#empty'  => $this->t('ยังไม่มีรายการ กด "เพิ่ม Div" เพื่อเพิ่มรายการ'),
+      '#empty'  => $this->t('No entries yet. Click "+ Add Div" to add one.'),
     ];
 
     foreach ($divs as $i => $div) {
@@ -77,12 +77,12 @@ class DivJumpSettingsForm extends ConfigFormBase {
         '#min'           => 1,
         '#max'           => 999,
         '#size'          => 6,
-        '#description'   => $this->t('แทรกหลัง row ที่ n (นับจาก 1)'),
+        '#description'   => $this->t('Insert after row n (1-based)'),
       ];
 
       $form['divs_wrapper']['divs'][$i]['remove'] = [
         '#type'                    => 'submit',
-        '#value'                   => $this->t('ลบ'),
+        '#value'                   => $this->t('Remove'),
         '#name'                    => 'remove_' . $i,
         '#submit'                  => ['::removeDiv'],
         '#ajax'                    => [
@@ -96,7 +96,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
 
     $form['divs_wrapper']['add_div'] = [
       '#type'                    => 'submit',
-      '#value'                   => $this->t('+ เพิ่ม Div'),
+      '#value'                   => $this->t('+ Add Div'),
       '#submit'                  => ['::addDiv'],
       '#ajax'                    => [
         'callback' => '::ajaxUpdateDivsWrapper',
@@ -105,33 +105,33 @@ class DivJumpSettingsForm extends ConfigFormBase {
       '#limit_validation_errors' => [],
     ];
 
-    // ─── Page Visibility ────────────────────────────────────────────────────
+    // ── Page Visibility ──────────────────────────────────────────────────────
     $form['visibility'] = [
       '#type'  => 'details',
-      '#title' => $this->t('การแสดงตามหน้า (Page Visibility)'),
+      '#title' => $this->t('Page Visibility'),
       '#open'  => TRUE,
     ];
 
     $form['visibility']['visibility_type'] = [
       '#type'          => 'radios',
-      '#title'         => $this->t('แสดง DIVjump บนหน้าเพจ'),
+      '#title'         => $this->t('Show DivJump on'),
       '#options'       => [
-        0 => $this->t('ทุกหน้า <em>ยกเว้น</em>หน้าที่ระบุด้านล่าง'),
-        1 => $this->t('<em>เฉพาะ</em>หน้าที่ระบุด้านล่าง'),
+        0 => $this->t('All pages <em>except</em> those listed below'),
+        1 => $this->t('<em>Only</em> the pages listed below'),
       ],
       '#default_value' => (int) ($config->get('page_visibility.type') ?? 0),
     ];
 
     $form['visibility']['pages'] = [
       '#type'          => 'textarea',
-      '#title'         => $this->t('รายการหน้า'),
+      '#title'         => $this->t('Pages'),
       '#description'   => $this->t(
-        'กรอก path ทีละบรรทัด ใช้ <code>&lt;front&gt;</code> สำหรับหน้าแรก '
-        . 'และ <code>*</code> เป็น wildcard<br>'
-        . 'ตัวอย่าง:<br>'
-        . '<code>/node/*</code> — ทุกหน้า node<br>'
-        . '<code>/blog</code> — หน้า blog เท่านั้น<br>'
-        . '<code>&lt;front&gt;</code> — หน้าแรก'
+        'Enter one path per line. Use <code>&lt;front&gt;</code> for the front page '
+        . 'and <code>*</code> as a wildcard.<br>'
+        . 'Examples:<br>'
+        . '<code>/node/*</code> — all node pages<br>'
+        . '<code>/blog</code> — the blog page only<br>'
+        . '<code>&lt;front&gt;</code> — the front page'
       ),
       '#default_value' => $config->get('page_visibility.pages') ?? '',
       '#rows'          => 6,
@@ -140,27 +140,27 @@ class DivJumpSettingsForm extends ConfigFormBase {
     return parent::buildForm($form, $form_state);
   }
 
-  // ─── AJAX Callbacks ──────────────────────────────────────────────────────
+  // ── AJAX Callbacks ────────────────────────────────────────────────────────
 
   /**
-   * AJAX callback: คืน divs_wrapper ที่อัปเดตแล้ว
+   * AJAX callback: returns the updated divs_wrapper element.
    */
   public function ajaxUpdateDivsWrapper(array &$form, FormStateInterface $form_state) {
     return $form['divs_wrapper'];
   }
 
   /**
-   * Submit handler: เพิ่มแถวใหม่
+   * Submit handler: add a new empty row.
    */
   public function addDiv(array &$form, FormStateInterface $form_state) {
-    $divs = $this->extractDivsFromInput($form_state);
+    $divs   = $this->extractDivsFromInput($form_state);
     $divs[] = ['div_id' => '', 'row_position' => 3];
     $form_state->set('divs', $divs);
     $form_state->setRebuild(TRUE);
   }
 
   /**
-   * Submit handler: ลบแถว
+   * Submit handler: remove a row by index.
    */
   public function removeDiv(array &$form, FormStateInterface $form_state) {
     $trigger = $form_state->getTriggeringElement();
@@ -170,7 +170,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
     unset($divs[$index]);
     $divs = array_values($divs);
 
-    // ถ้าลบหมดแล้ว ให้มีแถวว่าง 1 แถวเสมอ
+    // Always keep at least one empty row.
     if (empty($divs)) {
       $divs = [['div_id' => '', 'row_position' => 3]];
     }
@@ -180,10 +180,10 @@ class DivJumpSettingsForm extends ConfigFormBase {
   }
 
   /**
-   * ดึงค่า divs จาก user input ปัจจุบัน (ระหว่าง AJAX rebuild)
+   * Reads current div values from user input during an AJAX rebuild.
    */
   protected function extractDivsFromInput(FormStateInterface $form_state): array {
-    $raw = $form_state->getValue('divs') ?? [];
+    $raw  = $form_state->getValue('divs') ?? [];
     $divs = [];
     foreach ($raw as $row) {
       $divs[] = [
@@ -191,31 +191,30 @@ class DivJumpSettingsForm extends ConfigFormBase {
         'row_position' => max(1, (int) ($row['row_position'] ?? 3)),
       ];
     }
-    return $divs ?: $form_state->get('divs') ?? [];
+    return $divs ?: ($form_state->get('divs') ?? []);
   }
 
-  // ─── Validate & Submit ───────────────────────────────────────────────────
+  // ── Validate & Submit ─────────────────────────────────────────────────────
 
   /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $rows = $form_state->getValue('divs') ?? [];
-    foreach ($rows as $i => $row) {
+    foreach ($form_state->getValue('divs') ?? [] as $i => $row) {
       $div_id = trim($row['div_id'] ?? '');
       if (empty($div_id)) {
-        continue; // แถวว่าง — จะถูก filter ออกตอน save
+        continue; // Empty rows are filtered out on save.
       }
       if (str_starts_with($div_id, '#')) {
         $form_state->setErrorByName(
           "divs][$i][div_id",
-          $this->t('แถวที่ @n: ไม่ต้องใส่เครื่องหมาย # นำหน้า', ['@n' => $i + 1])
+          $this->t('Row @n: Do not include a leading # character.', ['@n' => $i + 1])
         );
       }
       if (str_contains($div_id, ' ')) {
         $form_state->setErrorByName(
           "divs][$i][div_id",
-          $this->t('แถวที่ @n: Div ID ต้องไม่มีช่องว่าง', ['@n' => $i + 1])
+          $this->t('Row @n: Div ID must not contain spaces.', ['@n' => $i + 1])
         );
       }
     }
@@ -225,7 +224,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // กรอง divs ที่มี div_id จริงๆ
+    // Save only rows that have a non-empty div_id.
     $divs = [];
     foreach ($form_state->getValue('divs') ?? [] as $row) {
       $div_id = trim($row['div_id'] ?? '');
@@ -246,7 +245,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     $this->messenger()->addMessage(
-      $this->t('บันทึกการตั้งค่า DivJump เรียบร้อยแล้ว กรุณา <a href="/admin/config/development/performance">clear cache</a> เพื่อให้การเปลี่ยนแปลงมีผล')
+      $this->t('DivJump settings saved. Please <a href="/admin/config/development/performance">clear the cache</a> for changes to take effect.')
     );
   }
 
