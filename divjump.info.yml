@@ -3,4 +3,4 @@ type: module
 description: 'Move a div element and insert it between specific views-rows'
 core_version_requirement: ^10 || ^11
 package: Custom
-version: '1.1.1'
+version: '1.1.2'

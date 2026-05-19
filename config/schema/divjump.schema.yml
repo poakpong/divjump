@@ -4,7 +4,7 @@ divjump.settings:
   mapping:
     divs:
       type: sequence
-      label: 'รายการ Div ที่ต้องการย้าย'
+      label: 'Div entries to move'
       sequence:
         type: mapping
         label: 'Div entry'
@@ -14,14 +14,17 @@ divjump.settings:
             label: 'Div ID'
           row_position:
             type: integer
-            label: 'ตำแหน่ง views-row ที่ต้องการแทรก'
+            label: 'Insert after views-row number'
+          views_selector:
+            type: string
+            label: 'Views container CSS selector'
     page_visibility:
       type: mapping
-      label: 'การแสดงตามหน้า'
+      label: 'Page visibility'
       mapping:
         type:
           type: integer
-          label: 'ประเภทการแสดง (0=ยกเว้น, 1=เฉพาะ)'
+          label: 'Visibility type (0=except listed, 1=only listed)'
         pages:
           type: string
-          label: 'รายการ path ของหน้า'
+          label: 'Page paths'

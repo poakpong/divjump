@@ -33,7 +33,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
     // Load divs from form state (during AJAX) or from config (first load).
     if ($form_state->get('divs') === NULL) {
       $saved = $config->get('divs') ?? [];
-      $form_state->set('divs', !empty($saved) ? $saved : [['div_id' => '', 'row_position' => 3]]);
+      $form_state->set('divs', !empty($saved) ? $saved : [['div_id' => '', 'row_position' => 3, 'views_selector' => '']]);
     }
     $divs = $form_state->get('divs');
 
@@ -44,7 +44,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
         . '</div>',
     ];
 
-    // ── Div entries table ────────────────────────────────────────────────────
+    // ── Div entries table ─────────────────────────────────────────────────────
     $form['divs_wrapper'] = [
       '#type'   => 'fieldset',
       '#title'  => $this->t('Div entries to move'),
@@ -57,6 +57,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
       '#header' => [
         $this->t('Div ID (without #)'),
         $this->t('Insert after row #'),
+        $this->t('Views container selector (optional)'),
         $this->t(''),
       ],
       '#empty'  => $this->t('No entries yet. Click "+ Add Div" to add one.'),
@@ -68,7 +69,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
         '#default_value' => $div['div_id'] ?? '',
         '#placeholder'   => 'block-thex-adsenseadunit-3',
         '#maxlength'     => 255,
-        '#attributes'    => ['style' => 'min-width:300px'],
+        '#attributes'    => ['style' => 'min-width:260px'],
       ];
 
       $form['divs_wrapper']['divs'][$i]['row_position'] = [
@@ -76,8 +77,17 @@ class DivJumpSettingsForm extends ConfigFormBase {
         '#default_value' => $div['row_position'] ?? 3,
         '#min'           => 1,
         '#max'           => 999,
-        '#size'          => 6,
-        '#description'   => $this->t('Insert after row n (1-based)'),
+        '#size'          => 5,
+        '#description'   => $this->t('1-based'),
+      ];
+
+      $form['divs_wrapper']['divs'][$i]['views_selector'] = [
+        '#type'          => 'textfield',
+        '#default_value' => $div['views_selector'] ?? '',
+        '#placeholder'   => '.node-page',
+        '#maxlength'     => 255,
+        '#attributes'    => ['style' => 'min-width:200px'],
+        '#description'   => $this->t('Scope <code>.views-row</code> to this container. Leave empty to search the whole page.'),
       ];
 
       $form['divs_wrapper']['divs'][$i]['remove'] = [
@@ -105,7 +115,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
       '#limit_validation_errors' => [],
     ];
 
-    // ── Page Visibility ──────────────────────────────────────────────────────
+    // ── Page Visibility ───────────────────────────────────────────────────────
     $form['visibility'] = [
       '#type'  => 'details',
       '#title' => $this->t('Page Visibility'),
@@ -154,7 +164,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
    */
   public function addDiv(array &$form, FormStateInterface $form_state) {
     $divs   = $this->extractDivsFromInput($form_state);
-    $divs[] = ['div_id' => '', 'row_position' => 3];
+    $divs[] = ['div_id' => '', 'row_position' => 3, 'views_selector' => ''];
     $form_state->set('divs', $divs);
     $form_state->setRebuild(TRUE);
   }
@@ -170,9 +180,8 @@ class DivJumpSettingsForm extends ConfigFormBase {
     unset($divs[$index]);
     $divs = array_values($divs);
 
-    // Always keep at least one empty row.
     if (empty($divs)) {
-      $divs = [['div_id' => '', 'row_position' => 3]];
+      $divs = [['div_id' => '', 'row_position' => 3, 'views_selector' => '']];
     }
 
     $form_state->set('divs', $divs);
@@ -187,8 +196,9 @@ class DivJumpSettingsForm extends ConfigFormBase {
     $divs = [];
     foreach ($raw as $row) {
       $divs[] = [
-        'div_id'       => trim($row['div_id'] ?? ''),
-        'row_position' => max(1, (int) ($row['row_position'] ?? 3)),
+        'div_id'         => trim($row['div_id'] ?? ''),
+        'row_position'   => max(1, (int) ($row['row_position'] ?? 3)),
+        'views_selector' => trim($row['views_selector'] ?? ''),
       ];
     }
     return $divs ?: ($form_state->get('divs') ?? []);
@@ -203,7 +213,7 @@ class DivJumpSettingsForm extends ConfigFormBase {
     foreach ($form_state->getValue('divs') ?? [] as $i => $row) {
       $div_id = trim($row['div_id'] ?? '');
       if (empty($div_id)) {
-        continue; // Empty rows are filtered out on save.
+        continue;
       }
       if (str_starts_with($div_id, '#')) {
         $form_state->setErrorByName(
@@ -224,14 +234,14 @@ class DivJumpSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Save only rows that have a non-empty div_id.
     $divs = [];
     foreach ($form_state->getValue('divs') ?? [] as $row) {
       $div_id = trim($row['div_id'] ?? '');
       if (!empty($div_id)) {
         $divs[] = [
-          'div_id'       => $div_id,
-          'row_position' => max(1, (int) ($row['row_position'] ?? 3)),
+          'div_id'         => $div_id,
+          'row_position'   => max(1, (int) ($row['row_position'] ?? 3)),
+          'views_selector' => trim($row['views_selector'] ?? ''),
         ];
       }
     }
