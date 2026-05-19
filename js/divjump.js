@@ -7,15 +7,13 @@
    * Moves each configured div element and inserts it after the specified
    * .views-row index as defined in the admin settings.
    *
-   * Bug fix (v1.1.2):
-   * - once() is now applied per target element instead of on <body>.
-   *   Previously, once('divjump-moved', 'body', context) would return empty
-   *   when Drupal's BigPipe / AJAX called attach() with a fragment context
-   *   that did not contain <body>, causing the entire behavior to be skipped.
-   * - Added optional views_selector to scope .views-row queries to a specific
-   *   container, preventing mismatches when multiple views exist on a page.
-   * - Handles edge case where rowPosition equals the total row count
-   *   (appends after the last row instead of crashing).
+   * v1.1.3 fix:
+   * - Replaced once(id, domElement) with a data-attribute guard.
+   *   @drupal/once v1.0.1 expects a CSS selector string or Array/NodeList,
+   *   not a bare DOM Element — passing one directly could return [] and
+   *   cause the behavior to bail out silently.
+   * - Added core/once to library dependencies (was missing).
+   * - Library version bumped to 1.1.3 so browsers bust the old cached JS.
    */
   Drupal.behaviors.divjump = {
     attach: function (context, settings) {
@@ -34,7 +32,8 @@
           return;
         }
 
-        // Search the full document — getElementById always does this anyway.
+        // getElementById always searches the full document — safe regardless
+        // of the current attach context (BigPipe fragment, AJAX, etc.).
         var targetDiv = document.getElementById(divId);
         if (!targetDiv) {
           if (typeof console !== 'undefined') {
@@ -43,13 +42,13 @@
           return;
         }
 
-        // Guard against double-processing by marking the target element itself.
-        // This is safe across BigPipe / AJAX re-attaches because we check the
-        // actual element, not the attach context.
-        var processed = once('divjump-' + divId, targetDiv);
-        if (!processed.length) {
-          return; // Already moved in a previous attach cycle.
+        // Guard against double-processing with a data attribute.
+        // More reliable than once(id, element) which requires a CSS selector
+        // string or array in @drupal/once v1.0.1.
+        if (targetDiv.hasAttribute('data-divjump-done')) {
+          return;
         }
+        targetDiv.setAttribute('data-divjump-done', '1');
 
         // Determine the scope for .views-row queries.
         var scope = document;
@@ -73,9 +72,9 @@
           return;
         }
 
-        // rowPosition is 1-based:
-        //   rowPosition = 3  →  insert before rows[3]  =  after the 3rd row
-        //   rowPosition = 10 with 10 rows  →  append after the last row
+        // rowPosition is 1-based.
+        //   rowPosition = 3  →  insert before rows[3]  =  after the 3rd row.
+        //   rowPosition >= rows.length  →  append after the last row.
         if (rowPosition > rows.length) {
           if (typeof console !== 'undefined') {
             console.warn(
@@ -88,11 +87,9 @@
         }
 
         if (rowPosition === rows.length) {
-          // Insert after the very last row.
           rows[rows.length - 1].parentNode.appendChild(targetDiv);
         }
         else {
-          // Insert before rows[rowPosition]  (0-indexed → between row N and N+1).
           rows[rowPosition].parentNode.insertBefore(targetDiv, rows[rowPosition]);
         }
       });
